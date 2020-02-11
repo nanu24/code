@@ -1,0 +1,51 @@
+package org.apache.bikerenting1.loader;
+
+import org.apache.bikerenting1.support.TransformerSupport;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.VoidFunction;
+
+
+public class SparkLoader {
+    public static void main(String[] args){
+
+        SparkConf sparkConf = new SparkConf();
+        sparkConf.setAppName("CapitalBikeShare");
+        sparkConf.setMaster("local[8]");
+
+        JavaSparkContext sc = new JavaSparkContext(sparkConf);
+
+        JavaRDD<String> textFileRDD = sc.textFile("R:\\Coursework\\Usecases\\CapitalBikesharedata\\2010-capitalbikeshare-tripdata.csv");
+
+        JavaRDD<String> updatedTextRDD = textFileRDD.map(new Function<String, String>() {
+            public String call(String s) throws Exception {
+
+                if (s.contains("Duration")) {
+                    return s + ",\"SSFormatted\",\"SS LAT\",\"SS LON\",\"ESFormatted\",\"ES LAT\",\"ES LON\"";
+                } else {
+                    String startAddress = s.split(",")[4].replaceAll("\"", "");
+                    String endAddress = s.split(",")[6].replaceAll("\"", "");
+                    String startAddressResponse = TransformerSupport.getGoogleApiParsedData(startAddress);
+                    String endAddressResponse = TransformerSupport.getGoogleApiParsedData(endAddress);
+                    System.out.println("startAddressResponse" + startAddressResponse + "endAddressResponse" + endAddressResponse);
+                    String startFormattedAddress = startAddressResponse.split(":")[0];
+                    String endFormattedAddress = endAddressResponse.split(":")[0];
+                    String latStart = startAddressResponse.split(":")[1].split(" ")[0];
+                    String longStart = startAddressResponse.split(":")[1].split(" ")[1];
+                    String latEnd = endAddressResponse.split(":")[1].split(" ")[0];
+                    String longEnd = endAddressResponse.split(":")[1].split(" ")[1];
+
+                    return s + ",\"" + startFormattedAddress + "\",\"" + latStart + "\",\"" + longStart + "\",\"" + endFormattedAddress + "\",\"" + latEnd + "\",\"" + longEnd + "\"";
+                }
+            }
+        });
+        updatedTextRDD.foreach(new VoidFunction<String>() {
+            public void call(String s) throws Exception {
+                System.out.println(s);
+            }
+        });
+    }
+}
+
