@@ -1,2 +1,12 @@
 spark-submit --class retail_db.GetRevenuePerOrder "C:\Users\prem wilfred\IdeaProjects\spark2demo\target\scala-2.11\spark2demo_2.11-0.1.jar" 
 	  local "C:\Users\prem wilfred\Desktop\tmp\data-master\retail_db\order_items" "C:\Users\prem wilfred\Desktop\tmp\data-master\retail_db\revenue_per_order"
+
+
+
+
+
+spark-submit yarn --deploy-mode client \
+ --class retail_db.GetRevenueForOrderUsingParallelize \
+ --conf spark.ui.port=12789 \
+ spark2demo_2.11-0.1.jar \
+ yarn-client /data/retail_db/order_items/part-00000 2
